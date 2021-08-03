@@ -8,8 +8,11 @@ bool gameOver;
 const int width = 118;
 const int height = 20;
 int x, y, fruitX, fruitY, score;
+int tailX[100], tailY[100];
+int nTail;
 enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN};
 eDirection dir;
+
 
 void Setup() {
     gameOver = false;
@@ -23,7 +26,7 @@ void Setup() {
 
 void Draw() {
     system("cls");
-    for ( int i = 0; i < width + 2; i++ )
+    for ( int i = 0; i < width + 2; i++ )               // horizontal wall
         cout << "#";
     
     cout << endl;
@@ -32,26 +35,34 @@ void Draw() {
     {
         for ( int j = 0; j < width; j++)
         {
-            if ( j == 0)
+            if ( j == 0)                                // vertical wall
                 cout << "#";
-            if ( i == y && j == x ) 
+            if ( i == y && j == x )                     // spawn snake
                 cout << "O";
-            else if ( i == fruitY && j == fruitX )
+            else if ( i == fruitY && j == fruitX )      // spawn fruit
                 cout << "F";
-            else 
-                cout << " ";
-            
-
+            else {
+                bool print = false;
+                for ( int k = 0; k < nTail; k++ ) {
+                    if ( tailX[k] == j && tailY[k] == i) {
+                        cout << "o";
+                        print = true;
+                    }
+                }
+                if ( !print) {
+                   cout << " " ;
+                }
+            }
             if ( j == width - 1 )
                 cout << "#";
-            
         }
+        cout << endl;
     }
 
-    for ( int i = 0; i < width + 2; i++ )
+    for ( int i = 0; i < width + 2; i++ )               // horizontal wall
         cout << "#";
     cout << endl;
-    cout << "Score: " << score << endl;
+    cout << "Score: " << score << endl;                 // score tab
 }
 
 void Input() {
@@ -78,36 +89,59 @@ void Input() {
         }
     }
 }
-
+ 
 void Logic(){
 
-switch (dir)
-{
-    case LEFT:
-        x--;
-        break;
-    case RIGHT:
-        x++;
-        break;
-    case UP:
-        y--;
-        break;
-    case DOWN:
-        y++;
-        break;
-    default:
-        break;
-}
+    
+    int prevX = tailX[0];           
+    int prevY = tailY[0];            
+    int prev2X, prev2Y;
+    tailX[0] = x;                   // the first element of array tailX and array tailY is the dimension of the head
+    tailY[0] = y;
 
-if ( x > width || x < 0 || y > height || y < 0 ) {
-    gameOver = true;
-}
+    for ( int i = 1; i < nTail; i++ ) {     // this will start when the snake already eaten ATLEAST 2 fruits
+        prev2X = tailX[i];
+        prev2Y = tailY[i];
+        tailX[i] = prevX;
+        tailY[i] = prevY;
+        prevX = prev2X;
+        prevY = prev2Y;
+    }
 
-if ( x == fruitX && y == fruitY ){
-    score += 10;
-    fruitX = rand() % width;
-    fruitY = rand() % height;
-}
+    switch (dir)    // logic for Input
+    {
+        case LEFT:
+            x--;
+            break;
+        case RIGHT:
+            x++;
+            break;
+        case UP:
+            y--;
+            break;
+        case DOWN:
+            y++;
+            break;
+        default:
+            break;
+    }
+
+    if ( x > width || x < 0 || y > height || y < 0 ) {  // when snake hit wall, game is over
+        gameOver = true;
+    }
+
+    for ( int i = 0; i < nTail; i++ ) {     // when snake hit its body, game is over
+        if ( tailX[i] == fruitX && tailY[i] == fruitY) {
+            gameOver = true;
+        }
+    }
+
+    if ( x == fruitX && y == fruitY ){      // when fruit was eaten
+        score += 10;                        // plus score
+        fruitX = rand() % width;            //spawn new fruit - x dimension
+        fruitY = rand() % height;             //spawn new fruit - y dimension   
+        nTail++;
+    }
 
 }
 
@@ -119,7 +153,6 @@ int main() {
         Draw();
         Input();
         Logic();
-        //Sleep(10); sleep(10);
     }
     return 0;
 }
